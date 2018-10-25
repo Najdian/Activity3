@@ -30,48 +30,38 @@ form = '''<!DOCTYPE html>
 
 class MessageHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        # How long was the message?
         length = int(self.headers.get('Content-length', 0))
 
-        # Read the correct amount of data from the request.
         data = self.rfile.read(length).decode()
-        # Extract the "message" field from the request data.
         name = parse_qs(data)["name"][0]
         city = parse_qs(data)["city"][0]
         enrollment = parse_qs(data)["enrollment"][0]
         status = parse_qs(data)["status"][0]
 
-        # Escape HTML tags in the message so users can't break world+dog.
         name = name.replace("<", "&lt;")
         city = city.replace("<", "&lt;")
         enrollment = enrollment.replace("<", "&lt;")
         status = status.replace("<", "&lt;")
 
 
-        # Store it in memory.
         memory.append(name)
         memory.append(city)
         memory.append(enrollment)
         memory.append(status)
         memory.append('\n')
 
-        # 1. Send a 303 redirect back to the root page.
         self.send_response(303)
         self.send_header('location', '/')
         self.end_headers()
 
     def do_GET(self):
-        # First, send a 200 OK response.
         self.send_response(200)
 
-        # Then send headers.
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
 
-        # 2. Put the response together out of the form and the stored messages.
         msg = form.format("\n".join(memory))
 
-        # 3. Send the response.
         self.wfile.write(msg.encode())
 
 if __name__ == '__main__':
